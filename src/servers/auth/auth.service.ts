@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ErrorCode } from 'src/constants/error-code';
 import { CommonError } from 'src/errors/common.error';
 import { UserService } from 'src/servers/user/user.service';
-import { UserPublic } from 'src/types';
+import { Role, UserPublic } from 'src/types';
 import { encryptPassword } from 'src/utils';
 
 @Injectable()
@@ -26,6 +26,18 @@ export class AuthService {
   }
 
   async login(body: UserPublic) {
+    const payload = { sub: body._id, ...body };
+    delete payload._id;
+    return {
+      access_token: this.jwtService.sign(payload),
+      userInfo: body,
+    };
+  }
+
+  async adminLogin(body: UserPublic) {
+    if (body.role !== Role.SysAdmin && body.role !== Role.Admin) {
+      throw new CommonError(ErrorCode.UserAuthError, '无权限登录后台');
+    }
     const payload = { sub: body._id, ...body };
     delete payload._id;
     return {

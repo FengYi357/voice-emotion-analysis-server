@@ -7,6 +7,7 @@ import { UserModule } from './servers/user/user.module';
 import { AuthModule } from './servers/auth/auth.module';
 import { APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { JwtAuthGuard } from './servers/auth/jwt-auth.guard';
+import { RolesGuard } from './servers/user/roles.guard';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { JwtAuthGuard } from './servers/auth/jwt-auth.guard';
   providers: [
     AppService,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
     {
       provide: APP_PIPE,
       useValue: new ValidationPipe({

@@ -6,10 +6,26 @@ import { CommonError } from 'src/errors/common.error';
 import { encryptPassword, makeSalt } from 'src/utils';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './entities/user.entity';
+import { Role } from 'src/types';
 
 @Injectable()
 export class UserService {
   constructor(@InjectModel('User') private readonly userModel: Model<User>) {}
+
+  async checkSysAdmin() {
+    const user = await this.userModel.findOne({ role: 'sysAdmin' });
+    if (!user) {
+      const { password, salt } = await this.generatePassword('HmxZxy99!');
+      const sysAdmin = new this.userModel({
+        username: 'admin',
+        password,
+        salt,
+        role: Role.SysAdmin,
+        nickname: '系统管理员',
+      });
+      await sysAdmin.save();
+    }
+  }
 
   async queryUserList(config: { page: number; pageSize: number }) {
     const { page, pageSize } = config;
@@ -91,5 +107,27 @@ export class UserService {
       return null;
     }
     return user;
+  }
+
+  async update(id: string, body: CreateUserDto) {
+    const user = await this.userModel.findById(id);
+    if (!user) {
+      throw new CommonError(ErrorCode.UserNotFound, '用户不存在');
+    }
+    Object.assign(user, body);
+    await user.save();
+    return user.toObject();
+  }
+
+  async updatePassword(id: string, password: string) {
+    const user = await this.userModel.findById(id);
+    if (!user) {
+      throw new CommonError(ErrorCode.UserNotFound, '用户不存在');
+    }
+    const { password: psw, salt } = await this.generatePassword(password);
+    user.password = psw;
+    user.salt = salt;
+    await user.save();
+    return true;
   }
 }

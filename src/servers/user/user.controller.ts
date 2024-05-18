@@ -17,16 +17,20 @@ import { AuthService } from 'src/servers/auth/auth.service';
 import { LocalAuthGuard } from 'src/servers/auth/local-auth.guard';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserService } from './user.service';
+import { Role } from 'src/types';
+import { Roles } from 'src/decorators/roles.decorator';
 
 @Controller('users')
 export class UserController {
   constructor(
     private readonly userService: UserService,
     private readonly authService: AuthService,
-  ) {}
+  ) {
+    // 检测数据中是否有超级管理员,没有则创建一个
+    this.userService.checkSysAdmin();
+  }
 
   @Get()
-  @Public()
   async queryUserList(
     @Query('page') page: number,
     @Query('pageSize') pageSize: number,
@@ -38,13 +42,13 @@ export class UserController {
   }
 
   @Put()
-  @Public()
+  @Roles(Role.SysAdmin, Role.Admin)
   async resetPassword(@Body() body: { id: string; password: string }) {
     return this.userService.resetPassword(body.id, body.password);
   }
 
   @Delete(':id')
-  @Public()
+  @Roles(Role.SysAdmin, Role.Admin)
   async delete(@Param('id') id: string) {
     return this.userService.delete(id);
   }
@@ -54,6 +58,13 @@ export class UserController {
   @Post('/login')
   async login(@Req() req) {
     return this.authService.login(req.user);
+  }
+
+  @UseGuards(LocalAuthGuard)
+  @Public()
+  @Post('/admin/login')
+  async adminLogin(@Req() req) {
+    return this.authService.adminLogin(req.user);
   }
 
   @Public()
@@ -75,6 +86,21 @@ export class UserController {
       throw new CommonError(ErrorCode.UserNotFound, '用户不存在');
     }
     return user.toObject();
+  }
+
+  @Put(':id')
+  @Roles(Role.SysAdmin, Role.Admin)
+  async update(@Param('id') id: string, @Body() body: CreateUserDto) {
+    return this.userService.update(id, body);
+  }
+
+  @Put(':id/password')
+  @Roles(Role.SysAdmin, Role.Admin)
+  async updatePassword(
+    @Param('id') id: string,
+    @Body() body: { password: string },
+  ) {
+    return this.userService.updatePassword(id, body.password);
   }
 
   // @Public()
