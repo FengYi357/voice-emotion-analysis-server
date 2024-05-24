@@ -51,7 +51,7 @@ export class AdviceService {
     return this.adviceModel.findByIdAndUpdate(_id, { reply }, { new: true });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} advice`;
+  remove(id: string) {
+    return this.adviceModel.findByIdAndDelete(id);
   }
 }

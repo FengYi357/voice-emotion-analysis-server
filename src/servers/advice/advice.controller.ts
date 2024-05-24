@@ -52,7 +52,8 @@ export class AdviceController {
   }
 
   @Delete(':id')
+  @Roles(Role.SysAdmin, Role.Admin)
   remove(@Param('id') id: string) {
-    return this.adviceService.remove(+id);
+    return this.adviceService.remove(id);
   }
 }
