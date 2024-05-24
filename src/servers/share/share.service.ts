@@ -19,8 +19,8 @@ export class ShareService {
     return share.save();
   }
 
-  findAllByUser(userId: string) {
-    return this.shareModel.find({ user: userId });
+  findAllByUser() {
+    return this.shareModel.find();
   }
 
   async findAllByAdmin(config: { page: number; pageSize: number }) {

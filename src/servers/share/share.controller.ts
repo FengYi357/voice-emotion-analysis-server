@@ -24,8 +24,8 @@ export class ShareController {
   }
 
   @Get()
-  findAll(@Req() req) {
-    return this.shareService.findAllByUser(req.user._id).populate('user');
+  findAll() {
+    return this.shareService.findAllByUser().populate('user');
   }
 
   @Get('admin')
